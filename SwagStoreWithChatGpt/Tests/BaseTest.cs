@@ -1,4 +1,6 @@
-﻿using NUnit.Framework.Interfaces;
+﻿using AventStack.ExtentReports;
+using AventStack.ExtentReports.Reporter;
+using NUnit.Framework.Interfaces;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using WebDriverManager;
@@ -10,6 +12,9 @@ namespace SwagStoreWithChatGpt.Tests
 	{
         [ThreadStatic]
         protected static IWebDriver? driver;
+
+        protected ExtentReports extent;
+        protected ExtentTest test;
 
         protected void Given(string description, Action action)
         {
@@ -36,7 +41,21 @@ namespace SwagStoreWithChatGpt.Tests
         }
 
 
+        [OneTimeSetUp]
+        public virtual void OneTimeSetUp()
+        {
+            string dir = TestContext.CurrentContext.TestDirectory + "\\";
+            string fileName = this.GetType().ToString() + ".html";
+            ExtentSparkReporter htmlReporter = new ExtentSparkReporter(dir + fileName);
+
+            extent = new ExtentReports();
+            extent.AttachReporter(htmlReporter);
+
+        }
+
+
         /**
+         * 
          * using Selenium WebDriverManager
          * with this we no longer need to install ChromeDriver 
          * or any browser driver as a dependency
@@ -52,13 +71,7 @@ namespace SwagStoreWithChatGpt.Tests
                 driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
             }
 
-            //if(driver == null)
-            //{
-            //    driver = new ChromeDriver();
-            //    driver.Manage().Window.Maximize();
-            //    driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
-            //}
-
+            test = extent.CreateTest(TestContext.CurrentContext.Test.Name);
         }
 
         [TearDown]
@@ -76,8 +89,39 @@ namespace SwagStoreWithChatGpt.Tests
                 driver.Dispose(); // Dispose of the driver explicitly
                 driver = null; // Set the driver to null to release the reference
             }
+
+            var status = TestContext.CurrentContext.Result.Outcome.Status;
+            var stacktrace = string.IsNullOrEmpty(TestContext.CurrentContext.Result.StackTrace)
+            ? ""
+            : string.Format("{0}", TestContext.CurrentContext.Result.StackTrace);
+            Status logstatus;
+
+            switch (status)
+            {
+                case TestStatus.Failed:
+                    logstatus = Status.Fail;
+                    break;
+                case TestStatus.Inconclusive:
+                    logstatus = Status.Warning;
+                    break;
+                case TestStatus.Skipped:
+                    logstatus = Status.Skip;
+                    break;
+                default:
+                    logstatus = Status.Pass;
+                    break;
+            }
+
+            test.Log(logstatus, "Test ended with " + logstatus + stacktrace);
+
         }
 
+
+        [OneTimeTearDown]
+        public virtual void OneTimeTearDown()
+        {
+            extent.Flush();
+        }
 
         protected void TakeScreenshot(string testName)
         {
