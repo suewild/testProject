@@ -55,8 +55,6 @@ namespace SwagStoreWithChatGpt.Tests
 
 
         /**
-         * 
-         * 
          * using Selenium WebDriverManager
          * with this we no longer need to install ChromeDriver 
          * or any browser driver as a dependency
