@@ -16,9 +16,9 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '3.1'  # change to your .NET version
+        dotnet-version: '8.0.x' 
     - name: Build with dotnet
-      run: dotnet build YourSolution.sln --configuration Release
+      run: dotnet build SwagStoreWithChatGpt.sln --configuration Release
     - name: Test with dotnet
-      run: dotnet test YourSolution.sln --configuration Release --no-build
+      run: dotnet test SwagStoreWithChatGpt.sln --configuration Release --no-build
 
